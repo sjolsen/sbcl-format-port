@@ -161,6 +161,7 @@ public:
 	{
 		switch (_type) {
 			case string_tag:
+				_string.~string_t ();
 				break;
 			case directive_tag:
 				_directive.~directive_ptr ();
