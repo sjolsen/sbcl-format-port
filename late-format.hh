@@ -1,6 +1,9 @@
 #ifndef LATE_FORMAT_HH
 #define LATE_FORMAT_HH
 
+
+/// Declarations for PARSE-DIRECTIVE
+
 #include "string.hh"
 #include <vector>
 
