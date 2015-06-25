@@ -125,10 +125,10 @@ public:
 	{
 		switch (_type) {
 			case string_tag:
-				_string = other._string;
+				new (&_string) string_t (other._string);
 				break;
 			case directive_tag:
-				_directive = other._directive;
+				new (&_directive) directive_ptr (other._directive);
 				break;
 		}
 	}
@@ -168,6 +168,31 @@ public:
 		}
 	}
 };
+
+template <typename SFun, typename DFun>
+std::common_type_t <
+	std::result_of_t <SFun (string_t)>,
+	std::result_of_t <DFun (directive_ptr)>
+>
+token_elim (const token_t& token, SFun sfun, DFun dfun)
+{
+	switch (token.type ()) {
+		case token_t::string_tag:
+			return sfun (token.string ());
+		case token_t::directive_tag:
+			return dfun (token.directive ());
+	}
+}
+
+template <typename GFun>
+std::common_type_t <
+	std::result_of_t <GFun (string_t)>,
+	std::result_of_t <GFun (directive_ptr)>
+>
+apply (GFun gfun, const token_t& token)
+{
+	return token_elim (token, gfun, gfun);
+}
 
 using token_list = std::vector <token_t>;
 
