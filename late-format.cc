@@ -40,7 +40,7 @@ std::tuple <int, std::size_t> parse_integer_unsafe (string_t string, std::size_t
 
 format_directive parse_directive (string_t string, std::size_t start)
 {
-	auto posn    = 1 + start;
+	auto posn    = start + static_cast <std::size_t> (1);
 	auto params  = paramlist {};
 	auto colonp  = false;
 	auto atsignp = false;
@@ -48,20 +48,18 @@ format_directive parse_directive (string_t string, std::size_t start)
 
 	auto get_char = [&] () {
 		if (posn == end)
-			throw format_error ()
-				._complaint ("string ended before directive was found")
-				._control_string (string)
-				._offset (start);
+			throw format_error ("string ended before directive was found",
+			                    string,
+			                    start);
 		else
 			return schar (string, posn);
 	};
 
 	auto check_ordering = [&] () {
 		if (colonp or atsignp)
-			throw format_error ()
-				._complaint ("parameters found after #\\: or #\\@ modifier")
-				._control_string (string)
-				._offset (posn)
+			throw format_error ("parameters found after #\\: or #\\@ modifier",
+			                    string,
+			                    posn)
 				._references ("ANSI CL §22.3");
 	};
 
@@ -139,20 +137,18 @@ format_directive parse_directive (string_t string, std::size_t start)
 		}
 		else if (c == ':') {
 			if (colonp)
-				throw format_error ()
-					._complaint ("too many colons supplied")
-					._control_string (string)
-					._offset (posn)
+				throw format_error ("too many colons supplied",
+				                    string,
+				                    posn)
 					._references ("ANSI CL §22.3");
 			else
 				colonp = true;
 		}
 		else if (c == '@') {
 			if (atsignp)
-				throw format_error ()
-					._complaint ("too many #\\@ characters supplied")
-					._control_string (string)
-					._offset (posn)
+				throw format_error ("too many #\\@ characters supplied",
+				                    string,
+				                    posn)
 					._references ("ANSI CL §22.3");
 			else
 				atsignp = true;
@@ -174,15 +170,102 @@ loop_return:;
 		if (closing_slash != length (string))
 			posn = closing_slash;
 		else
-			throw format_error ()
-				._complaint ("no matching closing slash")
-				._control_string (string)
-				._offset (posn);
+			throw format_error ("no matching closing slash",
+			                    string,
+			                    posn);
 	}
+
 	return format_directive {
 		string, start, posn + 1,
 		static_cast <char> (std::toupper (c)),
 		colonp, atsignp,
 		std::move (params)
 	};
+}
+
+
+/// Implementation for TOKENIZE-CONTROL-STRING
+
+token_list tokenize_control_string (string_t string)
+{
+	using directive_ptr = std::shared_ptr <format_directive>;
+
+	auto index                   = static_cast <std::size_t> (0);
+	auto end                     = length (string);
+	auto result                  = token_list {};
+	auto block                   = std::vector <directive_ptr> {};
+	auto pprint                  = directive_ptr {};
+	auto semicolon               = directive_ptr {};
+	auto justification_semicolon = directive_ptr {};
+
+	while (true) {
+		auto next_directive = position ('~', string, index);
+
+		if (next_directive > index)
+			result.push_back (token_t {subseq (string, index, next_directive)});
+		if (next_directive == end)
+			goto loop_return;
+
+		auto directive = std::make_shared <format_directive> (parse_directive (string, next_directive));
+		auto c         = directive->character;
+
+		// this processing is required by CLHS 22.3.5.2
+		if (c == '<') {
+			block.push_back (directive);
+		}
+		else if (!block.empty () and (c == ';') and directive->colonp) {
+			semicolon = directive;
+		}
+		else if (c == '>') {
+			if (block.empty ())
+				throw format_error ("~> without a matching ~<",
+				                    string,
+				                    next_directive);
+
+			if (directive->colonp) {
+				if (!pprint)
+					pprint = block.back ();
+				semicolon = nullptr;
+			}
+			else if (semicolon) {
+				if (!justification_semicolon)
+					justification_semicolon = semicolon;
+			}
+
+			block.pop_back ();
+		}
+		else if (block.empty ()) {
+			// block cases are handled by the #\< expander/interpreter
+			switch (c) {
+				case 'W':
+				case 'I':
+				case '_':
+					if (!pprint)
+						pprint = directive;
+					break;
+				default:
+					if (directive->colonp and !pprint)
+						pprint = directive;
+					break;
+			}
+		}
+
+		result.push_back (token_t {directive});
+		index = directive->end;
+	}
+loop_return:;
+	if (pprint and justification_semicolon) {
+		auto pprint_offset        = pprint->end                  - static_cast <std::size_t> (1);
+		auto justification_offset = justification_semicolon->end - static_cast <std::size_t> (1);
+
+		throw format_error ("misuse of justification and pprint directives",
+		                    string,
+		                    std::min (pprint_offset, justification_offset))
+			._second_relative (std::max (pprint_offset, justification_offset)
+			                   - std::min (pprint_offset, justification_offset)
+			                   - static_cast <std::size_t> (1))
+			._references ("ANSI CL §22.3.5.2");
+	}
+
+	return result;
 }

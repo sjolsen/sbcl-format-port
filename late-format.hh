@@ -1,25 +1,28 @@
 #ifndef LATE_FORMAT_HH
 #define LATE_FORMAT_HH
 
+#include "string.hh"
+#include <vector>
+#include <memory>
+
 
 /// Declarations for PARSE-DIRECTIVE
 
-#include "string.hh"
-#include <vector>
-
-enum kwd {
+enum kwd
+{
 	KWD_ARG,
 	KWD_REMAINING
 };
 
-struct param_t {
+struct param_t
+{
 	std::size_t position;
 
 	enum tag_t {
-		int_t,
-		kwd_t,
-		char_t,
-		nil_t
+		int_tag,
+		kwd_tag,
+		char_tag,
+		nil_tag
 	} type;
 	union {
 		int  int_param;
@@ -28,25 +31,25 @@ struct param_t {
 	};
 
 	param_t& _int_param (int param) {
-		type = int_t;
+		type = int_tag;
 		int_param = param;
 		return *this;
 	}
 
 	param_t& _kwd_param (kwd param) {
-		type = kwd_t;
+		type = kwd_tag;
 		kwd_param = param;
 		return *this;
 	}
 
 	param_t& _char_param (char param) {
-		type = char_t;
+		type = char_tag;
 		char_param = param;
 		return *this;
 	}
 
 	param_t& _nil_param () {
-		type = nil_t;
+		type = nil_tag;
 		return *this;
 	}
 };
@@ -59,22 +62,21 @@ struct format_error
 	// args
 	std::string control_string;
 	std::size_t offset;
-	// second_relative
+	std::size_t second_relative = -1;
 	// print_banner
-	const char* references;
+	const char* references = nullptr;
 
-	format_error& _complaint (std::string s) {
-		complaint = std::move (s);
-		return *this;
+	format_error (std::string complaint,
+	              string_t    control_string,
+	              std::size_t offset)
+		: complaint (std::move (complaint)),
+		  control_string (to_string (control_string)),
+		  offset (offset)
+	{
 	}
 
-	format_error& _control_string (string_t s) {
-		control_string = to_string (s);
-		return *this;
-	}
-
-	format_error& _offset (std::size_t o) {
-		offset = o;
+	format_error& _second_relative (std::size_t sr) {
+		second_relative = sr;
 		return *this;
 	}
 
@@ -84,7 +86,8 @@ struct format_error
 	}
 };
 
-struct format_directive {
+struct format_directive
+{
 	string_t    string;
 	std::size_t start;
 	std::size_t end;
@@ -94,6 +97,80 @@ struct format_directive {
 	paramlist   params;
 };
 
+using directive_ptr = std::shared_ptr <format_directive>;
+
 format_directive parse_directive (string_t string, std::size_t start);
+
+
+/// Declarations for TOKENIZE-CONTROL-STRING
+
+class token_t
+{
+public:
+	enum tag_t {
+		string_tag,
+		directive_tag
+	};
+
+private:
+	tag_t _type;
+	union {
+		string_t _string;
+		directive_ptr _directive;
+	};
+
+public:
+	token_t (const token_t& other)
+		: _type (other._type)
+	{
+		switch (_type) {
+			case string_tag:
+				_string = other._string;
+				break;
+			case directive_tag:
+				_directive = other._directive;
+				break;
+		}
+	}
+
+	token_t (string_t token)
+		: _type (string_tag),
+		  _string (token)
+	{
+	}
+
+	token_t (directive_ptr token)
+		: _type (directive_tag),
+		  _directive (std::move (token))
+	{
+	}
+
+	tag_t type () const {
+		return _type;
+	}
+
+	string_t string () const {
+		return _string;
+	}
+
+	directive_ptr directive () const {
+		return _directive;
+	}
+
+	~token_t ()
+	{
+		switch (_type) {
+			case string_tag:
+				break;
+			case directive_tag:
+				_directive.~directive_ptr ();
+				break;
+		}
+	}
+};
+
+using token_list = std::vector <token_t>;
+
+token_list tokenize_control_string (string_t string);
 
 #endif

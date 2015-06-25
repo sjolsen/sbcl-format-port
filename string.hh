@@ -27,4 +27,13 @@ std::string to_string (string_t string)
 	return std::string (string.begin, length (string));
 }
 
+static inline
+string_t subseq (string_t string, std::size_t begin, std::size_t end)
+{
+	return string_t {
+		string.begin + begin,
+		string.begin + end
+	};
+}
+
 #endif
