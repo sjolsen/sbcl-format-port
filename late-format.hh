@@ -12,17 +12,17 @@
 // Error type from Lisp. May be able to redesign.
 struct format_error
 {
-	std::string         complaint;
-	std::string         control_string;
+	string_t            complaint;
+	string_t           control_string;
 	std::size_t         offset;
 	maybe <std::size_t> second_relative = {};
 	maybe <string_t>    references      = {};
 
-	format_error (std::string complaint,
+	format_error (string_t complaint,
 	              string_t control_string,
 	              std::size_t offset)
 		: complaint (std::move (complaint)),
-		  control_string (to_string (control_string)),
+		  control_string (std::move (control_string)),
 		  offset (offset)
 	{
 	}
