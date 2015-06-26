@@ -30,6 +30,7 @@ void terpri ()
 #include "../sjo/compose.hh"
 
 int main ()
+try
 {
 	auto s = string_t {"Stuff: [~{[~{~a~^, ~}]~^,~%        ~}]~%"};
 	std::cout << s << std::endl;
@@ -38,4 +39,10 @@ int main ()
 	{
 		token.apply (sequence_ (LIFT (print), terpri));
 	}
+
+	tokenize_control_string ("~>");
+}
+catch (const format_error& err)
+{
+	print_format_error (std::cerr, err) << std::endl;
 }

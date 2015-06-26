@@ -43,18 +43,18 @@ format_directive parse_directive (string_t string, std::size_t start)
 
 	auto get_char = [&] () {
 		if (posn == end)
-			throw format_error ("string ended before directive was found",
-			                    string,
-			                    start);
+			throw format_error ("string ended before directive was found")
+				._control_string (string)
+				._offset (start);
 		else
 			return string [posn];
 	};
 
 	auto check_ordering = [&] () {
 		if (colonp or atsignp)
-			throw format_error ("parameters found after #\\: or #\\@ modifier",
-			                    string,
-			                    posn)
+			throw format_error ("parameters found after #\\: or #\\@ modifier")
+				._control_string (string)
+				._offset (posn)
 				._references ("ANSI CL §22.3");
 	};
 
@@ -132,18 +132,18 @@ format_directive parse_directive (string_t string, std::size_t start)
 		}
 		else if (c == ':') {
 			if (colonp)
-				throw format_error ("too many colons supplied",
-				                    string,
-				                    posn)
+				throw format_error ("too many colons supplied")
+					._control_string (string)
+					._offset (posn)
 					._references ("ANSI CL §22.3");
 			else
 				colonp = true;
 		}
 		else if (c == '@') {
 			if (atsignp)
-				throw format_error ("too many #\\@ characters supplied",
-				                    string,
-				                    posn)
+				throw format_error ("too many #\\@ characters supplied")
+					._control_string (string)
+					._offset (posn)
 					._references ("ANSI CL §22.3");
 			else
 				atsignp = true;
@@ -165,9 +165,9 @@ loop_return:;
 		if (closing_slash != length (string))
 			posn = closing_slash;
 		else
-			throw format_error ("no matching closing slash",
-			                    string,
-			                    posn);
+			throw format_error ("no matching closing slash")
+				._control_string (string)
+				._offset (posn);
 	}
 
 	return format_directive {
@@ -213,9 +213,9 @@ token_list tokenize_control_string (string_t string)
 		}
 		else if (c == '>') {
 			if (block.empty ())
-				throw format_error ("~> without a matching ~<",
-				                    string,
-				                    next_directive);
+				throw format_error ("~> without a matching ~<")
+					._control_string (string)
+					._offset (next_directive);
 
 			if (directive->colonp) {
 				if (!pprint)
@@ -253,9 +253,9 @@ loop_return:;
 		auto pprint_offset        = pprint->end                  - static_cast <std::size_t> (1);
 		auto justification_offset = justification_semicolon->end - static_cast <std::size_t> (1);
 
-		throw format_error ("misuse of justification and pprint directives",
-		                    string,
-		                    std::min (pprint_offset, justification_offset))
+		throw format_error ("misuse of justification and pprint directives")
+			._control_string (string)
+			._offset (std::min (pprint_offset, justification_offset))
 			._second_relative (std::max (pprint_offset, justification_offset)
 			                   - std::min (pprint_offset, justification_offset)
 			                   - static_cast <std::size_t> (1))

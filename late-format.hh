@@ -1,6 +1,7 @@
 #ifndef LATE_FORMAT_HH
 #define LATE_FORMAT_HH
 
+#include "format-error.hh"
 #include "types/string.hh"
 #include "types/disjoint-union.hh"
 #include "types/maybe.hh"
@@ -8,35 +9,6 @@
 #include "types/null.hh"
 #include <vector>
 #include <memory>
-
-// Error type from Lisp. May be able to redesign.
-struct format_error
-{
-	string_t            complaint;
-	string_t           control_string;
-	std::size_t         offset;
-	maybe <std::size_t> second_relative = {};
-	maybe <string_t>    references      = {};
-
-	format_error (string_t complaint,
-	              string_t control_string,
-	              std::size_t offset)
-		: complaint (std::move (complaint)),
-		  control_string (std::move (control_string)),
-		  offset (offset)
-	{
-	}
-
-	format_error& _second_relative (std::size_t sr) {
-		second_relative = sr;
-		return *this;
-	}
-
-	format_error& _references (string_t s) {
-		references = s;
-		return *this;
-	}
-};
 
 
 /// Declarations for PARSE-DIRECTIVE
