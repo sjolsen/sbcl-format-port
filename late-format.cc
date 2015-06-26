@@ -5,33 +5,33 @@
 
 /// Implementation for PARSE-DIRECTIVE
 
-std::size_t position (char c, string_t string, std::size_t start)
+std::size_t position (char c, string_view string, std::size_t start)
 {
 	for (auto pos = start; pos < length (string); ++pos)
-		if (schar (string, pos) == c)
+		if (string [pos] == c)
 			return pos;
 	return length (string);
 }
 
-std::tuple <int, std::size_t> parse_integer_unsafe (string_t string, std::size_t index)
+std::tuple <int, std::size_t> parse_integer_unsafe (string_view string, std::size_t index)
 // Requires that substring(string,index,end(string)) be non-empty and match the
 // regex "^[+-]?[0-9]+"
 {
 	bool negative = false;
-	if (schar (string, index) == '-') {
+	if (string [index] == '-') {
 		negative = true;
 		++index;
 	}
-	else if (schar (string, index) == '+')
+	else if (string [index] == '+')
 		++index;
 
 	int result = 0;
 	while (index != length (string)
-	       and '0' <= schar (string, index)
-	       and schar (string, index) <= '9')
+	       and '0' <= string [index]
+	       and string [index] <= '9')
 	{
 		result *= 10;
-		result += schar (string, index);
+		result += string [index];
 		++index;
 	}
 
@@ -40,7 +40,7 @@ std::tuple <int, std::size_t> parse_integer_unsafe (string_t string, std::size_t
 	return std::make_tuple (result, index);
 }
 
-format_directive parse_directive (string_t string, std::size_t start)
+format_directive parse_directive (string_view string, std::size_t start)
 {
 	auto posn    = start + static_cast <std::size_t> (1);
 	auto params  = paramlist {};
@@ -54,7 +54,7 @@ format_directive parse_directive (string_t string, std::size_t start)
 			                    string,
 			                    start);
 		else
-			return schar (string, posn);
+			return string [posn];
 	};
 
 	auto check_ordering = [&] () {
@@ -156,8 +156,8 @@ format_directive parse_directive (string_t string, std::size_t start)
 				atsignp = true;
 		}
 		else {
-			if ((schar (string, posn - 1) == ',') and
-			    ((posn < 2) or (schar (string, posn - 2) != '\''))) {
+			if ((string [posn - 1] == ',') and
+			    ((posn < 2) or (string [posn - 2] != '\''))) {
 				check_ordering ();
 				params.push_back (param_t {posn - 1, nil});
 			}
@@ -188,7 +188,7 @@ loop_return:;
 
 /// Implementation for TOKENIZE-CONTROL-STRING
 
-token_list tokenize_control_string (string_t string)
+token_list tokenize_control_string (string_view string)
 {
 	using directive_ptr = std::shared_ptr <format_directive>;
 

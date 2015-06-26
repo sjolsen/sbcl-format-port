@@ -1,8 +1,8 @@
 #ifndef LATE_FORMAT_HH
 #define LATE_FORMAT_HH
 
-#include "string.hh"
-#include "../disjoint-union/disjoint-union.hh"
+#include "types/string.hh"
+#include "types/disjoint-union.hh"
 #include <vector>
 #include <memory>
 
@@ -19,7 +19,7 @@ struct nil_t {};
 static nil_t nil;
 
 struct param_t {
-	using data_t = sjo::disjoint_union <int, kwd, char, nil_t>;
+	using data_t = disjoint_union <int, kwd, char, nil_t>;
 
 	std::size_t position;
 	data_t      data;
@@ -62,7 +62,7 @@ struct format_error
 	const char* references = nullptr;
 
 	format_error (std::string complaint,
-	              string_t    control_string,
+	              string_view control_string,
 	              std::size_t offset)
 		: complaint (std::move (complaint)),
 		  control_string (to_string (control_string)),
@@ -83,7 +83,7 @@ struct format_error
 
 struct format_directive
 {
-	string_t    string;
+	string_view string;
 	std::size_t start;
 	std::size_t end;
 	char        character;
@@ -94,7 +94,7 @@ struct format_directive
 
 using directive_ptr = std::shared_ptr <format_directive>;
 
-format_directive parse_directive (string_t string, std::size_t start);
+format_directive parse_directive (string_view string, std::size_t start);
 
 
 /// Declarations for TOKENIZE-CONTROL-STRING
@@ -103,10 +103,10 @@ enum {
 	TOK_STRING,
 	TOK_DIRECTIVE
 };
-using token_t = sjo::disjoint_union <string_t, directive_ptr>;
+using token_t = disjoint_union <string_view, directive_ptr>;
 
 using token_list = std::vector <token_t>;
 
-token_list tokenize_control_string (string_t string);
+token_list tokenize_control_string (string_view string);
 
 #endif

@@ -1,12 +1,9 @@
 #include "late-format.hh"
 #include <iostream>
 
-void print (string_t s)
+void print (string_view s)
 {
-	std::cout << "s: \"";
-	for (auto p = s.begin; p != s.end; ++p)
-		std::cout << *p;
-	std::cout << "\"";
+	std::cout << "s: \"" << s << "\"";
 }
 
 void print (const format_directive& d)
@@ -34,10 +31,9 @@ void terpri ()
 
 int main ()
 {
-	char s [] = "Stuff: [~{[~{~a~^, ~}]~^,~%        ~}]~%";
-	auto st = string_t {std::begin (s), std::end (s) - 1};
+	auto s = string_view {"Stuff: [~{[~{~a~^, ~}]~^,~%        ~}]~%"};
 
-	for (auto token : tokenize_control_string (st))
+	for (auto token : tokenize_control_string (s))
 	{
 		token.apply (sequence_ (LIFT (print), terpri));
 	}
