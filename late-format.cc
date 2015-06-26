@@ -35,6 +35,8 @@ std::tuple <int, std::size_t> parse_integer_unsafe (string_t string, std::size_t
 		++index;
 	}
 
+	if (negative)
+		result = -result;
 	return std::make_tuple (result, index);
 }
 
