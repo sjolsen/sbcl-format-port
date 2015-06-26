@@ -23,4 +23,13 @@ string_view subseq (string_view string, std::size_t begin, std::size_t end)
 	return string.substr (begin, end - begin);
 }
 
+static inline
+std::size_t position (char c, string_view string, std::size_t start)
+{
+	auto result = string.find (c, start);
+	if (result == string_view::npos)
+		return length (string);
+	return result;
+}
+
 #endif

@@ -5,14 +5,7 @@
 
 /// Implementation for PARSE-DIRECTIVE
 
-std::size_t position (char c, string_view string, std::size_t start)
-{
-	for (auto pos = start; pos < length (string); ++pos)
-		if (string [pos] == c)
-			return pos;
-	return length (string);
-}
-
+static
 std::tuple <int, std::size_t> parse_integer_unsafe (string_view string, std::size_t index)
 // Requires that substring(string,index,end(string)) be non-empty and match the
 // regex "^[+-]?[0-9]+"
@@ -92,7 +85,7 @@ format_directive parse_directive (string_view string, std::size_t start)
 		else if (c == 'v' or c == 'V') {
 			check_ordering ();
 
-			params.push_back (param_t {posn, KWD_ARG});
+			params.push_back (param_t {posn, keyword {"ARG"}});
 			++posn;
 
 			switch (get_char ()) {
@@ -109,7 +102,7 @@ format_directive parse_directive (string_view string, std::size_t start)
 		else if (c == '#') {
 			check_ordering ();
 
-			params.push_back (param_t {posn, KWD_REMAINING});
+			params.push_back (param_t {posn, keyword {"REMAINING"}});
 			++posn;
 
 			switch (get_char ()) {
@@ -204,7 +197,7 @@ token_list tokenize_control_string (string_view string)
 		auto next_directive = position ('~', string, index);
 
 		if (next_directive > index)
-			result.push_back (token_t::create <TOK_STRING> (subseq (string, index, next_directive)));
+			result.push_back (token_t {subseq (string, index, next_directive)});
 		if (next_directive == end)
 			goto loop_return;
 
@@ -252,7 +245,7 @@ token_list tokenize_control_string (string_view string)
 			}
 		}
 
-		result.push_back (token_t::create <TOK_DIRECTIVE> (directive));
+		result.push_back (token_t {directive});
 		index = directive->end;
 	}
 loop_return:;
