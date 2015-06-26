@@ -24,6 +24,14 @@ void print (directive_ptr p)
 	print (*p);
 }
 
+void terpri ()
+{
+	std::cout << std::endl;
+}
+
+#include "../sjo/lift.hh"
+#include "../sjo/compose.hh"
+
 int main ()
 {
 	char s [] = "Stuff: [~{[~{~a~^, ~}]~^,~%        ~}]~%";
@@ -31,6 +39,6 @@ int main ()
 
 	for (auto token : tokenize_control_string (st))
 	{
-		apply ([] (auto&& arg) { print (arg); std::cout << std::endl; }, token);
+		token.apply (sequence_ (LIFT (print), terpri));
 	}
 }

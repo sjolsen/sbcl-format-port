@@ -2,6 +2,7 @@
 #define LATE_FORMAT_HH
 
 #include "string.hh"
+#include "../disjoint-union/disjoint-union.hh"
 #include <vector>
 #include <memory>
 
@@ -14,43 +15,37 @@ enum kwd
 	KWD_REMAINING
 };
 
-struct param_t
-{
+struct nil_t {};
+static nil_t nil;
+
+struct param_t {
+	using data_t = sjo::disjoint_union <int, kwd, char, nil_t>;
+
 	std::size_t position;
+	data_t      data;
 
-	enum tag_t {
-		int_tag,
-		kwd_tag,
-		char_tag,
-		nil_tag
-	} type;
-	union {
-		int  int_param;
-		kwd  kwd_param;
-		char char_param;
-	};
-
-	param_t& _int_param (int param) {
-		type = int_tag;
-		int_param = param;
-		return *this;
+	param_t (std::size_t posn, int data)
+		: position (posn),
+		  data (data_t::create <0> (data))
+	{
 	}
 
-	param_t& _kwd_param (kwd param) {
-		type = kwd_tag;
-		kwd_param = param;
-		return *this;
+	param_t (std::size_t posn, kwd data)
+		: position (posn),
+		  data (data_t::create <1> (data))
+	{
 	}
 
-	param_t& _char_param (char param) {
-		type = char_tag;
-		char_param = param;
-		return *this;
+	param_t (std::size_t posn, char data)
+		: position (posn),
+		  data (data_t::create <2> (data))
+	{
 	}
 
-	param_t& _nil_param () {
-		type = nil_tag;
-		return *this;
+	param_t (std::size_t posn, nil_t data)
+		: position (posn),
+		  data (data_t::create <3> (data))
+	{
 	}
 };
 
@@ -104,96 +99,11 @@ format_directive parse_directive (string_t string, std::size_t start);
 
 /// Declarations for TOKENIZE-CONTROL-STRING
 
-class token_t
-{
-public:
-	enum tag_t {
-		string_tag,
-		directive_tag
-	};
-
-private:
-	tag_t _type;
-	union {
-		string_t _string;
-		directive_ptr _directive;
-	};
-
-public:
-	token_t (const token_t& other)
-		: _type (other._type)
-	{
-		switch (_type) {
-			case string_tag:
-				new (&_string) string_t (other._string);
-				break;
-			case directive_tag:
-				new (&_directive) directive_ptr (other._directive);
-				break;
-		}
-	}
-
-	token_t (string_t token)
-		: _type (string_tag),
-		  _string (token)
-	{
-	}
-
-	token_t (directive_ptr token)
-		: _type (directive_tag),
-		  _directive (std::move (token))
-	{
-	}
-
-	tag_t type () const {
-		return _type;
-	}
-
-	string_t string () const {
-		return _string;
-	}
-
-	directive_ptr directive () const {
-		return _directive;
-	}
-
-	~token_t ()
-	{
-		switch (_type) {
-			case string_tag:
-				_string.~string_t ();
-				break;
-			case directive_tag:
-				_directive.~directive_ptr ();
-				break;
-		}
-	}
+enum {
+	TOK_STRING,
+	TOK_DIRECTIVE
 };
-
-template <typename SFun, typename DFun>
-std::common_type_t <
-	std::result_of_t <SFun (string_t)>,
-	std::result_of_t <DFun (directive_ptr)>
->
-token_elim (const token_t& token, SFun sfun, DFun dfun)
-{
-	switch (token.type ()) {
-		case token_t::string_tag:
-			return sfun (token.string ());
-		case token_t::directive_tag:
-			return dfun (token.directive ());
-	}
-}
-
-template <typename GFun>
-std::common_type_t <
-	std::result_of_t <GFun (string_t)>,
-	std::result_of_t <GFun (directive_ptr)>
->
-apply (GFun gfun, const token_t& token)
-{
-	return token_elim (token, gfun, gfun);
-}
+using token_t = sjo::disjoint_union <string_t, directive_ptr>;
 
 using token_list = std::vector <token_t>;
 

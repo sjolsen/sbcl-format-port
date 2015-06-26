@@ -73,7 +73,7 @@ format_directive parse_directive (string_t string, std::size_t start)
 			std::size_t new_posn;
 			std::tie (param, new_posn) = parse_integer_unsafe (string, posn);
 
-			params.push_back (param_t {posn}._int_param (param));
+			params.push_back (param_t {posn, param});
 			posn = new_posn;
 
 			switch (get_char ()) {
@@ -90,7 +90,7 @@ format_directive parse_directive (string_t string, std::size_t start)
 		else if (c == 'v' or c == 'V') {
 			check_ordering ();
 
-			params.push_back (param_t {posn}._kwd_param (KWD_ARG));
+			params.push_back (param_t {posn, KWD_ARG});
 			++posn;
 
 			switch (get_char ()) {
@@ -107,7 +107,7 @@ format_directive parse_directive (string_t string, std::size_t start)
 		else if (c == '#') {
 			check_ordering ();
 
-			params.push_back (param_t {posn}._kwd_param (KWD_REMAINING));
+			params.push_back (param_t {posn, KWD_REMAINING});
 			++posn;
 
 			switch (get_char ()) {
@@ -125,7 +125,7 @@ format_directive parse_directive (string_t string, std::size_t start)
 			check_ordering ();
 
 			++posn;
-			params.push_back (param_t {posn}._char_param (get_char ()));
+			params.push_back (param_t {posn, get_char ()});
 			++posn;
 
 			if (get_char () != ',')
@@ -133,7 +133,7 @@ format_directive parse_directive (string_t string, std::size_t start)
 		}
 		else if (c == ',') {
 			check_ordering ();
-			params.push_back (param_t {posn}._nil_param ());
+			params.push_back (param_t {posn, nil});
 		}
 		else if (c == ':') {
 			if (colonp)
@@ -157,7 +157,7 @@ format_directive parse_directive (string_t string, std::size_t start)
 			if ((schar (string, posn - 1) == ',') and
 			    ((posn < 2) or (schar (string, posn - 2) != '\''))) {
 				check_ordering ();
-				params.push_back (param_t {posn - 1}._nil_param ());
+				params.push_back (param_t {posn - 1, nil});
 			}
 			goto loop_return;
 		}
@@ -202,7 +202,7 @@ token_list tokenize_control_string (string_t string)
 		auto next_directive = position ('~', string, index);
 
 		if (next_directive > index)
-			result.push_back (token_t {subseq (string, index, next_directive)});
+			result.push_back (token_t::create <TOK_STRING> (subseq (string, index, next_directive)));
 		if (next_directive == end)
 			goto loop_return;
 
@@ -250,7 +250,7 @@ token_list tokenize_control_string (string_t string)
 			}
 		}
 
-		result.push_back (token_t {directive});
+		result.push_back (token_t::create <TOK_DIRECTIVE> (directive));
 		index = directive->end;
 	}
 loop_return:;
