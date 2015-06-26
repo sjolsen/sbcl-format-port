@@ -1,7 +1,7 @@
 #include "late-format.hh"
 #include <iostream>
 
-void print (string_view s)
+void print (string_t s)
 {
 	std::cout << "s: \"" << s << "\"";
 }
@@ -31,7 +31,8 @@ void terpri ()
 
 int main ()
 {
-	auto s = string_view {"Stuff: [~{[~{~a~^, ~}]~^,~%        ~}]~%"};
+	auto s = string_t {"Stuff: [~{[~{~a~^, ~}]~^,~%        ~}]~%"};
+	std::cout << s << std::endl;
 
 	for (auto token : tokenize_control_string (s))
 	{

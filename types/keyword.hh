@@ -6,7 +6,7 @@
 // Just use string views of static strings for now. Might do full symbols later.
 struct keyword
 {
-	string_view string;
+	string_t string;
 };
 
 #endif

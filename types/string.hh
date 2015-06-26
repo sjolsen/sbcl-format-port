@@ -1,35 +1,22 @@
 #ifndef TYPES_STRING_HH
 #define TYPES_STRING_HH
 
-#include <experimental/string_view>
+#include "shared-string-view.hh"
+#include <algorithm>
 
-using string_view = std::experimental::string_view;
+using string_t = shared_string_view;
 
 static inline
-std::size_t length (string_view string)
+std::size_t length (string_t string)
 {
 	return string.length ();
 }
 
 static inline
-std::string to_string (string_view string)
+std::size_t position (char c, string_t string, std::size_t start)
 {
-	return string.to_string ();
-}
-
-static inline
-string_view subseq (string_view string, std::size_t begin, std::size_t end)
-{
-	return string.substr (begin, end - begin);
-}
-
-static inline
-std::size_t position (char c, string_view string, std::size_t start)
-{
-	auto result = string.find (c, start);
-	if (result == string_view::npos)
-		return length (string);
-	return result;
+	auto end = std::find (string.begin () + start, string.end (), c);
+	return end - string.begin ();
 }
 
 #endif

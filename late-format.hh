@@ -16,10 +16,10 @@ struct format_error
 	std::string         control_string;
 	std::size_t         offset;
 	maybe <std::size_t> second_relative = {};
-	maybe <string_view> references      = {};
+	maybe <string_t>    references      = {};
 
 	format_error (std::string complaint,
-	              string_view control_string,
+	              string_t control_string,
 	              std::size_t offset)
 		: complaint (std::move (complaint)),
 		  control_string (to_string (control_string)),
@@ -32,7 +32,7 @@ struct format_error
 		return *this;
 	}
 
-	format_error& _references (string_view s) {
+	format_error& _references (string_t s) {
 		references = s;
 		return *this;
 	}
@@ -83,7 +83,7 @@ using paramlist = std::vector <param_t>;
 
 struct format_directive
 {
-	string_view string;
+	string_t    string;
 	std::size_t start;
 	std::size_t end;
 	char        character;
@@ -94,21 +94,21 @@ struct format_directive
 
 using directive_ptr = std::shared_ptr <format_directive>;
 
-format_directive parse_directive (string_view string, std::size_t start);
+format_directive parse_directive (string_t string, std::size_t start);
 
 
 /// Declarations for TOKENIZE-CONTROL-STRING
 
 struct token_t
-	: disjoint_union <string_view, directive_ptr>
+	: disjoint_union <string_t, directive_ptr>
 {
-	using type = disjoint_union <string_view, directive_ptr>;
+	using type = disjoint_union <string_t, directive_ptr>;
 	enum : std::size_t {
 		TOKEN_STRING    = 0,
 		TOKEN_DIRECTIVE = 1
 	};
 
-	token_t (string_view data)
+	token_t (string_t data)
 		: type (type::create <TOKEN_STRING> (data))
 	{
 	}
@@ -121,6 +121,6 @@ struct token_t
 
 using token_list = std::vector <token_t>;
 
-token_list tokenize_control_string (string_view string);
+token_list tokenize_control_string (string_t string);
 
 #endif

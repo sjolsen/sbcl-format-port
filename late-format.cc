@@ -6,7 +6,7 @@
 /// Implementation for PARSE-DIRECTIVE
 
 static
-std::tuple <int, std::size_t> parse_integer_unsafe (string_view string, std::size_t index)
+std::tuple <int, std::size_t> parse_integer_unsafe (string_t string, std::size_t index)
 // Requires that substring(string,index,end(string)) be non-empty and match the
 // regex "^[+-]?[0-9]+"
 {
@@ -33,7 +33,7 @@ std::tuple <int, std::size_t> parse_integer_unsafe (string_view string, std::siz
 	return std::make_tuple (result, index);
 }
 
-format_directive parse_directive (string_view string, std::size_t start)
+format_directive parse_directive (string_t string, std::size_t start)
 {
 	auto posn    = start + static_cast <std::size_t> (1);
 	auto params  = paramlist {};
@@ -181,7 +181,7 @@ loop_return:;
 
 /// Implementation for TOKENIZE-CONTROL-STRING
 
-token_list tokenize_control_string (string_view string)
+token_list tokenize_control_string (string_t string)
 {
 	using directive_ptr = std::shared_ptr <format_directive>;
 
