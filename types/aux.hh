@@ -152,6 +152,22 @@ namespace aux {
 		return std::move (t);
 	}
 
+
+/// Variadic logic
+
+	static inline constexpr
+	bool vand ()
+	{
+		return true;
+	}
+
+	template <typename First, typename... Rest>
+	static inline constexpr
+	bool vand (First first, Rest... rest)
+	{
+		return first && vand (rest...);
+	}
+
 }
 
 #endif

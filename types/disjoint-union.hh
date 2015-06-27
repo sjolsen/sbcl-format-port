@@ -45,18 +45,18 @@ public:
 		return result;
 	}
 
-		template <std::size_t index>
-		static std::enable_if_t <index < sizeof... (T), disjoint_union>
-		create (const aux::nth_type <index, T...>& obj)
+	template <std::size_t index>
+	static std::enable_if_t <index < sizeof... (T), disjoint_union>
+	create (const aux::nth_type <index, T...>& obj)
 	{
 		disjoint_union result (index);
 		new (&result._storage) aux::nth_type <index, T...> (obj);
 		return result;
 	}
 
-			template <std::size_t index>
-			static std::enable_if_t <index < sizeof... (T), disjoint_union>
-			create (aux::nth_type <index, T...>&& obj)
+	template <std::size_t index>
+	static std::enable_if_t <index < sizeof... (T), disjoint_union>
+	create (aux::nth_type <index, T...>&& obj)
 	{
 		disjoint_union result (index);
 		new (&result._storage) aux::nth_type <index, T...> (std::move (obj));
@@ -66,12 +66,14 @@ public:
 	disjoint_union () = delete;
 
 	disjoint_union (const disjoint_union& other)
+		noexcept (aux::vand (std::is_nothrow_copy_constructible <T>::value...))
 		: _index (other._index)
 	{
 		copy_constructors [_index] (&_storage, &other._storage);
 	}
 
 	disjoint_union (disjoint_union&& other)
+		noexcept (aux::vand (std::is_nothrow_move_constructible <T>::value...))
 		: _index (other._index)
 	{
 		move_constructors [_index] (&_storage, &other._storage);

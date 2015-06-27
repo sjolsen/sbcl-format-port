@@ -16,7 +16,7 @@ void print (const format_directive& d)
 	          << "{params omitted}";
 }
 
-void print (directive_ptr p)
+void print (const directive_ptr& p)
 {
 	print (*p);
 }
@@ -35,7 +35,7 @@ try
 	auto s = string_t {"Stuff: [~{[~{~a~^, ~}]~^,~%        ~}]~%"};
 	std::cout << s << std::endl;
 
-	for (auto token : tokenize_control_string (s))
+	for (const auto& token : tokenize_control_string (s))
 	{
 		token.apply (sequence_ (LIFT (print), terpri));
 	}

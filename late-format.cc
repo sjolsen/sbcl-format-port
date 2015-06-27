@@ -183,15 +183,15 @@ loop_return:;
 
 token_list tokenize_control_string (string_t string)
 {
-	using directive_ptr = std::shared_ptr <format_directive>;
+	using ptr = const format_directive*;
 
 	auto index                   = static_cast <std::size_t> (0);
 	auto end                     = length (string);
 	auto result                  = token_list {};
-	auto block                   = std::vector <directive_ptr> {};
-	auto pprint                  = directive_ptr {};
-	auto semicolon               = directive_ptr {};
-	auto justification_semicolon = directive_ptr {};
+	auto block                   = std::vector <const format_directive*> {};
+	auto pprint                  = ptr {};
+	auto semicolon               = ptr {};
+	auto justification_semicolon = ptr {};
 
 	while (true) {
 		auto next_directive = position ('~', string, index);
@@ -201,15 +201,15 @@ token_list tokenize_control_string (string_t string)
 		if (next_directive == end)
 			goto loop_return;
 
-		auto directive = std::make_shared <format_directive> (parse_directive (string, next_directive));
+		auto directive = std::make_unique <format_directive> (parse_directive (string, next_directive));
 		auto c         = directive->character;
 
 		// this processing is required by CLHS 22.3.5.2
 		if (c == '<') {
-			block.push_back (directive);
+			block.push_back (directive.get ());
 		}
 		else if (!block.empty () and (c == ';') and directive->colonp) {
-			semicolon = directive;
+			semicolon = directive.get ();
 		}
 		else if (c == '>') {
 			if (block.empty ())
@@ -236,17 +236,17 @@ token_list tokenize_control_string (string_t string)
 				case 'I':
 				case '_':
 					if (!pprint)
-						pprint = directive;
+						pprint = directive.get ();
 					break;
 				default:
 					if (directive->colonp and !pprint)
-						pprint = directive;
+						pprint = directive.get ();
 					break;
 			}
 		}
 
-		result.push_back (token_t {directive});
 		index = directive->end;
+		result.push_back (token_t {std::move (directive)});
 	}
 loop_return:;
 	if (pprint and justification_semicolon) {

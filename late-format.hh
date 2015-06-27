@@ -64,7 +64,7 @@ struct format_directive
 	paramlist   params;
 };
 
-using directive_ptr = std::shared_ptr <format_directive>;
+using directive_ptr = std::unique_ptr <format_directive>;
 
 format_directive parse_directive (string_t string, std::size_t start);
 
@@ -80,13 +80,19 @@ struct token_t
 		TOKEN_DIRECTIVE = 1
 	};
 
+	token_t () = delete;
+	token_t (const token_t&) = delete;
+	token_t (token_t&&) = default;
+	token_t& operator = (const token_t&) = delete;
+	token_t& operator = (token_t&&) = default;
+
 	token_t (string_t data)
-		: type (type::create <TOKEN_STRING> (data))
+		: type (type::create <TOKEN_STRING> (std::move (data)))
 	{
 	}
 
 	token_t (directive_ptr data)
-		: type (type::create <TOKEN_DIRECTIVE> (data))
+		: type (type::create <TOKEN_DIRECTIVE> (std::move (data)))
 	{
 	}
 };
