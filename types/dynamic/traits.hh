@@ -1,0 +1,4 @@
+#ifndef TYPES_DYNAMIC_TRAITS_HH
+#define TYPES_DYNAMIC_TRAITS_HH
+
+#endif
