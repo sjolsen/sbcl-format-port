@@ -21,7 +21,7 @@ class disjoint_union
 	using storage_t = std::aligned_storage_t <
 		aux::max ({sizeof  (T)...}),
 		aux::lcm ({alignof (T)...})
-		>;
+	>;
 
 	storage_t   _storage;
 	std::size_t _index;
@@ -63,6 +63,12 @@ public:
 		return result;
 	}
 
+	void replace (disjoint_union other)
+	{
+		this->~disjoint_union ();
+		new (this) disjoint_union (std::move (other));
+	}
+
 	disjoint_union () = delete;
 
 	disjoint_union (const disjoint_union& other)
@@ -86,19 +92,19 @@ public:
 
 	std::size_t index () const
 	{
-		return index;
+		return _index;
 	}
 
 	template <std::size_t index>
 	aux::nth_type <index, T...>& get_unsafe ()
 	{
-		return *static_cast <aux::nth_type <index, T...>*> (&_storage);
+		return *static_cast <aux::nth_type <index, T...>*> (static_cast <void*> (&_storage));
 	}
 
 	template <std::size_t index>
 	const aux::nth_type <index, T...>& get_unsafe () const
 	{
-		return *static_cast <const aux::nth_type <index, T...>*> (&_storage);
+		return *static_cast <const aux::nth_type <index, T...>*> (static_cast <const void*> (&_storage));
 	}
 
 	template <std::size_t index>
